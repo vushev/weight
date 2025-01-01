@@ -1,0 +1,68 @@
+<!-- Настройки -->
+<div class="container">
+    <div id="settingsForm">
+        <h2>Настройки</h2>
+        <div class="form-group">
+            <label for="firstName">Име:</label>
+            <input type="text" id="firstName">
+        </div>
+        <div class="form-group">
+            <label for="lastName">Фамилия:</label>
+            <input type="text" id="lastName">
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email">
+        </div>
+        <div class="form-group">
+            <label for="age">Възраст:</label>
+            <input type="number" id="age">
+        </div>
+        <div class="form-group">
+            <label for="height">Височина (см):</label>
+            <input type="number" id="height">
+        </div>
+        <div class="form-group">
+            <label for="gender">Пол:</label>
+            <select id="gender">
+                <option value="">Изберете...</option>
+                <option value="male">Мъж</option>
+                <option value="female">Жена</option>
+                <option value="other">Друго</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="targetWeight">Целево тегло (кг):</label>
+            <input type="number" id="targetWeight" step="0.1">
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="isVisible">
+                Видим профил
+            </label>
+        </div>
+        <div class="button-group">
+            <button onclick="saveSettings()">Запази</button>
+            <button onclick="showChangePassword()">Смяна на парола</button>
+        </div>
+    </div>
+
+    <!-- Смяна на парола -->
+    <div id="changePasswordForm" style="display: none;">
+        <h2>Смяна на парола</h2>
+        <div class="form-group password-container">
+            <label for="currentPassword">Текуща парола:</label>
+            <input type="password" id="currentPassword" required>
+            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('currentPassword')">👁️</button>
+        </div>
+        <div class="form-group password-container">
+            <label for="newPassword">Нова парола:</label>
+            <input type="password" id="newPassword" required>
+            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('newPassword')">👁️</button>
+        </div>
+        <div class="button-group">
+            <button onclick="changePassword()">Смени парола</button>
+            <button onclick="showSettingsForm()">Назад</button>
+        </div>
+    </div>
+</div> 

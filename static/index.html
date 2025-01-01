@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weight Challenge</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Навигация -->
+        <nav id="mainNav" style="display: none;">
+            <button onclick="showWeightForm()">Добави тегло</button>
+            <button onclick="showStats()">Статистика</button>
+            <button onclick="showUsers()">Потребители</button>
+            <button onclick="showFriends()">Приятели</button>
+            <button onclick="showChallenges()">Предизвикателства</button>
+            <button onclick="showSettings()">Настройки</button>
+            <button onclick="logout()">Изход</button>
+        </nav>
+
+        <!-- Компоненти -->
+        <div id="components"></div>
+    </div>
+
+    <!-- Конфигурация и помощни функции (трябва да се заредят първи) -->
+    <script src="/static/js/config.js"></script>
+    <script src="/static/js/utils.js"></script>
+
+    <!-- Основни скриптове -->
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/weight.js"></script>
+    <script src="/static/js/social.js"></script>
+    <script src="/static/js/settings.js"></script>
+
+    <!-- Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js')
+                .then(registration => console.log('ServiceWorker registered'))
+                .catch(error => console.log('ServiceWorker registration failed:', error));
+        }
+    </script>
+
+    <script>
+        // Зареждане на компоненти
+        async function loadComponent(name) {
+            try {
+                const response = await fetch(`/static/components/${name}.html`);
+                const html = await response.text();
+                document.getElementById('components').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading component:', error);
+            }
+        }
+
+        // Проверка за автентикация при зареждане
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.getElementById('mainNav').style.display = 'flex';
+                showStats();
+            } else {
+                loadComponent('auth');
+            }
+        };
+    </script>
+</body>
+</html> 

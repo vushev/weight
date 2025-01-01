@@ -1,0 +1,47 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chess_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_USER=chess_user
+      - DB_PASSWORD=chess_password
+      - DB_NAME=chess_db
+      - DB_PORT=3306
+    volumes:
+      - .:/app
+    networks:
+      - chess-network
+
+  db:
+    image: mysql:8.0
+    container_name: chess_db
+    restart: always
+    environment:
+      - MYSQL_DATABASE=chess_db
+      - MYSQL_USER=chess_user
+      - MYSQL_PASSWORD=chess_password
+      - MYSQL_ROOT_PASSWORD=root_password
+    ports:
+      - "3806:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - chess-network
+
+volumes:
+  mysql_data:
+
+networks:
+  weight-network:
+    driver: bridge

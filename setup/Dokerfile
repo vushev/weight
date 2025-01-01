@@ -1,0 +1,26 @@
+# Dockerfile
+FROM golang:1.20-alpine
+
+# Инсталиране на необходими инструменти
+RUN apk add --no-cache gcc musl-dev
+
+# Задаване на работна директория
+WORKDIR /app
+
+# Копиране на go.mod и go.sum файловете
+COPY go.mod go.sum ./
+
+# Изтегляне на зависимостите
+RUN go mod download
+
+# Копиране на сорс кода
+COPY . .
+
+# Компилиране на приложението
+RUN go build -o main ./cmd/main.go
+
+# Експозване на порт
+EXPOSE 8080
+
+# Стартиране на приложението
+CMD ["./main"]

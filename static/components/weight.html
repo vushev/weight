@@ -1,0 +1,46 @@
+<!-- Форма за добавяне на тегло -->
+<div id="weightForm" class="weight-form" style="display: none;">
+    <h2>Добави тегло</h2>
+    <div class="form-group">
+        <label for="weight">Тегло (кг):</label>
+        <input type="number" id="weight" step="0.1" required>
+    </div>
+    <div class="form-group">
+        <label for="weightDate">Дата на измерване:</label>
+        <input type="datetime-local" id="weightDate" required>
+    </div>
+    <button onclick="addWeight()">Добави</button>
+</div>
+
+<!-- Статистика -->
+<div id="statsContainer" class="stats-container" style="display: none;">
+    <h2>Статистика</h2>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <h3>Текущо тегло</h3>
+            <p id="currentWeight">-</p>
+        </div>
+        <div class="stat-box">
+            <h3>Начално тегло</h3>
+            <p id="initialWeight">-</p>
+        </div>
+        <div class="stat-box">
+            <h3>Общ прогрес</h3>
+            <p id="totalProgress">-</p>
+        </div>
+        <div class="stat-box">
+            <h3>Дневен прогрес</h3>
+            <p id="dailyProgress">-</p>
+        </div>
+        <div class="stat-box">
+            <h3>BMI</h3>
+            <p id="bmi">-</p>
+        </div>
+    </div>
+</div>
+
+<!-- История -->
+<div id="historyContainer" class="history-container" style="display: none;">
+    <h2>История</h2>
+    <div id="weightHistory"></div>
+</div> 

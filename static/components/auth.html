@@ -1,0 +1,45 @@
+<!-- Регистрация -->
+<div id="registerForm" class="auth-form">
+    <h2>Регистрация</h2>
+    <div class="form-group">
+        <label for="registerUsername">Потребителско име:</label>
+        <input type="text" id="registerUsername" required>
+    </div>
+    <div class="form-group password-container">
+        <label for="registerPassword">Парола:</label>
+        <input type="password" id="registerPassword" required>
+        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('registerPassword')">👁️</button>
+    </div>
+    <div class="form-group">
+        <label for="registerHeight">Височина (см):</label>
+        <input type="number" id="registerHeight" required>
+    </div>
+    <button onclick="register()">Регистрация</button>
+</div>
+
+<!-- Вход -->
+<div id="loginForm" class="auth-form" style="display: none;">
+    <h2>Вход</h2>
+    <div class="form-group">
+        <label for="loginUsername">Потребителско име:</label>
+        <input type="text" id="loginUsername" required>
+    </div>
+    <div class="form-group password-container">
+        <label for="loginPassword">Парола:</label>
+        <input type="password" id="loginPassword" required>
+        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('loginPassword')">👁️</button>
+    </div>
+    <button onclick="login()">Вход</button>
+    <button onclick="showResetPassword()">Забравена парола</button>
+</div>
+
+<!-- Забравена парола -->
+<div id="resetPasswordForm" class="auth-form" style="display: none;">
+    <h2>Забравена парола</h2>
+    <div class="form-group">
+        <label for="resetUsername">Потребителско име:</label>
+        <input type="text" id="resetUsername" required>
+    </div>
+    <button onclick="resetPassword()">Възстанови парола</button>
+    <button onclick="showLogin()">Назад към вход</button>
+</div> 
