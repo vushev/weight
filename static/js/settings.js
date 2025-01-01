@@ -23,9 +23,10 @@ async function saveSettings() {
         lastName: document.getElementById('lastName').value,
         email: document.getElementById('email').value,
         age: parseInt(document.getElementById('age').value),
-        height: parseFloat(document.getElementById('height').value),
+        height: parseInt(document.getElementById('height').value),
         gender: document.getElementById('gender').value,
-        target: parseFloat(document.getElementById('targetWeight').value)
+        targetWeight: parseFloat(document.getElementById('targetWeight').value),
+        isVisible: document.getElementById('isVisible').checked
     };
 
     try {
@@ -94,7 +95,7 @@ function updateSettingsForm(data) {
     document.getElementById('age').value = data.age || '';
     document.getElementById('height').value = data.height || '';
     document.getElementById('gender').value = data.gender || '';
-    document.getElementById('targetWeight').value = data.target || '';
+    document.getElementById('targetWeight').value = data.targetWeight || '';
     document.getElementById('isVisible').checked = data.isVisible || false;
 }
 

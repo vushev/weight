@@ -110,4 +110,22 @@ function showResetPassword() {
     document.getElementById('registerForm').style.display = 'none';
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('resetPasswordForm').style.display = 'block';
+}
+
+// Добавяме функция за показване на формата за вход
+function showLoginForm() {
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('registerForm').style.display = 'none';
+}
+
+// Добавяме функция за инициализация
+async function initAuth() {
+    await loadComponent('auth');
+    showLoginForm(); // Показваме формата за вход по подразбиране
+}
+
+// Обновяваме функцията за показване на регистрационната форма
+function showRegisterForm() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
 } 

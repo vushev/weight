@@ -104,7 +104,7 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("Server starting on http://localhost:%s", port)
+	log.Printf("Server starting on http://%s:%s", os.Getenv("API_URL"), port)
 	r.Run(":" + port)
 }
 
