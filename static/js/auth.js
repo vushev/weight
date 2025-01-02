@@ -27,6 +27,7 @@ async function register() {
 }
 
 async function login() {
+    console.log('Login function called');
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
 

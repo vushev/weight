@@ -19,6 +19,7 @@ const config = {
         challenges: '/challenges',
         challengeAccept: '/challenges/:challengeId/accept',
         challengeReject: '/challenges/:challengeId/reject',
-        challengeResults: '/challenges/:challengeId/results'
+        challengeResults: '/challenges/:challengeId/results',
+        updateVisibility: '/user/visibility'
     }
 }; 

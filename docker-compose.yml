@@ -22,18 +22,26 @@ services:
       - ./migrations:/docker-entrypoint-initdb.d
     cap_add:
       - SYS_NICE
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   api:
     build: .
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - DB_HOST=db
       - DB_USER=user
       - DB_PASSWORD=password
       - DB_NAME=weight_challenge
+    volumes:
+      - .:/app
 
 volumes:
-  mysql_data: 
+  mysql_data:

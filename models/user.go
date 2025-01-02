@@ -11,6 +11,7 @@ type User struct {
 	Gender    string  `json:"gender,omitempty"`
 	Email     string  `json:"email,omitempty"`
 	Target    float64 `json:"target,omitempty"`
+	IsVisible bool    `json:"isVisible,omitempty"`
 }
 
 type UserProfile struct {

@@ -40,6 +40,7 @@ async function saveSettings() {
         });
 
         if (response.ok) {
+            await updateVisibility(settings.isVisible);
             alert('Настройките са запазени успешно');
         } else {
             const data = await response.json();
@@ -96,7 +97,7 @@ function updateSettingsForm(data) {
     document.getElementById('height').value = data.height || '';
     document.getElementById('gender').value = data.gender || '';
     document.getElementById('targetWeight').value = data.targetWeight || '';
-    document.getElementById('isVisible').checked = data.isVisible || false;
+    document.getElementById('isVisible').checked = data.isVisible;
 }
 
 // Навигационни функции
@@ -115,4 +116,28 @@ function showChangePassword() {
 function showSettingsForm() {
     document.getElementById('settingsForm').style.display = 'block';
     document.getElementById('changePasswordForm').style.display = 'none';
+}
+
+// Добавяме нова функция за обновяване на видимостта
+async function updateVisibility(isVisible) {
+    try {
+        const response = await fetch(`${config.apiUrl}${config.endpoints.updateVisibility}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('token')
+            },
+            body: JSON.stringify({ isVisible })
+        });
+
+        if (response.ok) {
+            alert('Видимостта на профила е обновена успешно');
+        } else {
+            const data = await response.json();
+            alert(data.error || 'Грешка при обновяване на видимостта');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Грешка при комуникацията със сървъра');
+    }
 } 

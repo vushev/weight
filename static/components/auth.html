@@ -15,14 +15,15 @@
         <input type="number" id="registerHeight" required>
     </div>
     <button onclick="register()">Регистрация</button>
+    <button onclick="showLoginForm()">Вход</button>
 </div>
 
 <!-- Вход -->
 <div id="loginForm" class="auth-form" style="display: none;">
     <h2>Вход</h2>
     <div class="form-group">
-        <label for="loginEmail">Email:</label>
-        <input type="email" id="loginEmail" required>
+        <label for="loginUsername">Потребителско име:</label>
+        <input type="text" id="loginUsername" required>
     </div>
     <div class="form-group password-container">
         <label for="loginPassword">Парола:</label>
@@ -45,3 +46,22 @@
     <button onclick="resetPassword()">Възстанови парола</button>
     <button onclick="showLogin()">Назад към вход</button>
 </div>
+
+<!-- JavaScript функции -->
+<script>
+function showRegisterForm() {
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('loginForm').style.display = 'none';
+}
+
+function showLoginForm() {
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('registerForm').style.display = 'none';
+}
+
+function togglePasswordVisibility(passwordFieldId) {
+    const passwordField = document.getElementById(passwordFieldId);
+    const type = passwordField.type === 'password' ? 'text' : 'password';
+    passwordField.type = type;
+}
+</script>

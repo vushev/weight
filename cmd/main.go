@@ -465,11 +465,12 @@ func getUserSettings(c *gin.Context) {
 
 	var user models.User
 	err := db.QueryRow(`
-        SELECT id, username, first_name, last_name, age, height, gender, email, target_weight 
-        FROM users 
-        WHERE id = ?`, userID).Scan(
+        SELECT u.id, u.username, u.first_name, u.last_name, u.age, u.height, u.gender, u.email, u.target_weight, us.is_visible
+        FROM users u
+        LEFT JOIN user_settings us ON u.id = us.user_id
+        WHERE u.id = ?`, userID).Scan(
 		&user.ID, &user.Username, &user.FirstName, &user.LastName,
-		&user.Age, &user.Height, &user.Gender, &user.Email, &user.Target)
+		&user.Age, &user.Height, &user.Gender, &user.Email, &user.Target, &user.IsVisible)
 
 	if err != nil {
 		log.Printf("Error fetching user settings: %v", err)
