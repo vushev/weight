@@ -350,4 +350,49 @@ button:hover {
     padding: 10px;
     border-radius: 4px;
     margin-bottom: 10px;
+}
+
+.friend-request {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.friend-info {
+    flex: 1;
+}
+
+.friend-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.accept-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.reject-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.accept-btn:hover {
+    background-color: #45a049;
+}
+
+.reject-btn:hover {
+    background-color: #da190b;
 } 

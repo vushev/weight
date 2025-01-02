@@ -59,7 +59,7 @@ async function loadFriends() {
         });
 
         if (!response.ok) {
-            throw new Error('Грешка при зареждане на приятелите');
+            throw new Error('Грешка при зареждане на приятели');
         }
 
         const data = await response.json();
@@ -284,40 +284,46 @@ async function sendFriendRequest(userId) {
 async function acceptFriendRequest(requestId) {
     try {
         const response = await fetch(`${config.apiUrl}${config.endpoints.friendAccept.replace(':requestId', requestId)}`, {
-            method: 'PUT',
+            method: 'POST',
             headers: {
                 'Authorization': localStorage.getItem('token')
             }
         });
 
-        if (!response.ok) {
-            throw new Error('Грешка при приемане на заявката');
+        if (response.ok) {
+            alert('Приятелството е прието успешно!');
+            // Презареждаме списъка с приятели
+            loadFriends();
+        } else {
+            const data = await response.json();
+            alert(data.error || 'Грешка при приемане на приятелството');
         }
-
-        await loadFriends();
     } catch (error) {
         console.error('Error:', error);
-        alert(error.message);
+        alert('Грешка при комуникацията със сървъра');
     }
 }
 
 async function rejectFriendRequest(requestId) {
     try {
         const response = await fetch(`${config.apiUrl}${config.endpoints.friendReject.replace(':requestId', requestId)}`, {
-            method: 'PUT',
+            method: 'POST',
             headers: {
                 'Authorization': localStorage.getItem('token')
             }
         });
 
-        if (!response.ok) {
-            throw new Error('Грешка при отхвърляне на заявката');
+        if (response.ok) {
+            alert('Заявката е отхвърлена');
+            // Презареждаме списъка с приятели
+            loadFriends();
+        } else {
+            const data = await response.json();
+            alert(data.error || 'Грешка при отхвърляне на заявката');
         }
-
-        await loadFriends();
     } catch (error) {
         console.error('Error:', error);
-        alert(error.message);
+        alert('Грешка при комуникацията със сървъра');
     }
 }
 
@@ -566,4 +572,27 @@ async function createChallenge(event) {
         console.error('Error:', error);
         alert(error.message);
     }
+}
+
+// Обновяваме функцията за показване на приятели, за да включва бутони за действие
+function displayFriendRequests(requests) {
+    const container = document.getElementById('friendRequests');
+    container.innerHTML = '';
+
+    requests.forEach(request => {
+        const requestElement = document.createElement('div');
+        requestElement.className = 'friend-request';
+        requestElement.innerHTML = `
+            <div class="friend-info">
+                <h3>${request.username}</h3>
+                <p>Статус: ${request.status}</p>
+                <p>Прогрес: ${request.progress || 0}%</p>
+            </div>
+            <div class="friend-actions">
+                <button onclick="acceptFriendRequest('${request.id}')" class="accept-btn">Приеми</button>
+                <button onclick="rejectFriendRequest('${request.id}')" class="reject-btn">Отхвърли</button>
+            </div>
+        `;
+        container.appendChild(requestElement);
+    });
 } 
