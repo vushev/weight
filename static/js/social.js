@@ -140,6 +140,86 @@ function updateUsersList(users) {
     });
 }
 
+// UI компоненти
+const UI = {
+    createFriendCard(friend, currentUser) {
+        const card = document.createElement('div');
+        card.className = 'friend-card';
+        
+        const info = this.createFriendInfo(friend, currentUser);
+        const buttons = this.createFriendButtons(friend, currentUser);
+        
+        card.appendChild(info);
+        if (buttons) card.appendChild(buttons);
+        
+        return card;
+    },
+
+    createFriendInfo(friend, currentUser) {
+        const info = document.createElement('div');
+        
+        const name = document.createElement('strong');
+        name.textContent = friend.username || 'Неизвестен потребител';
+        
+        const status = document.createElement('p');
+        status.textContent = `Статус: ${translateStatus(friend.status || 'pending')}`;
+        
+        const progress = document.createElement('p');
+        progress.textContent = `Прогрес: ${friend.progress ? friend.progress.toFixed(2) : 0}%`;
+        
+        info.appendChild(name);
+        info.appendChild(status);
+        
+        if (friend.status === 'pending') {
+            const requestInfo = document.createElement('p');
+            requestInfo.textContent = friend.senderId === currentUser.id ? 
+                'Изпратена заявка' : 'Получена заявка';
+            info.appendChild(requestInfo);
+        }
+        
+        info.appendChild(progress);
+        return info;
+    },
+
+    createFriendButtons(friend, currentUser) {
+        if (!friend.status) return null;
+
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'button-group';
+
+        console.log('Creating buttons for friend:', friend);
+
+        if (friend.status === 'pending') {
+            // Проверяваме дали имаме правилното ID
+            const friendshipId = friend.friendshipId || friend.id;
+            console.log('Using friendship ID:', friendshipId);
+
+            const acceptBtn = document.createElement('button');
+            acceptBtn.className = 'accept-btn';
+            acceptBtn.textContent = 'Приеми';
+            acceptBtn.onclick = () => acceptFriendRequest(friendshipId);
+
+            const rejectBtn = document.createElement('button');
+            rejectBtn.className = 'reject-btn';
+            rejectBtn.textContent = 'Отхвърли';
+            rejectBtn.onclick = () => rejectFriendRequest(friendshipId);
+
+            buttonGroup.appendChild(acceptBtn);
+            buttonGroup.appendChild(rejectBtn);
+        }
+
+        if (friend.status === 'accepted') {
+            const challengeBtn = document.createElement('button');
+            challengeBtn.textContent = 'Предизвикай';
+            challengeBtn.onclick = () => showNewChallengeForm(friend.id);
+            buttonGroup.appendChild(challengeBtn);
+        }
+
+        return buttonGroup.children.length > 0 ? buttonGroup : null;
+    }
+};
+
+// Основна функция за обновяване на списъка
 function updateFriendsList(friends) {
     const friendsList = document.getElementById('friendsList');
     if (!friendsList) {
@@ -147,43 +227,21 @@ function updateFriendsList(friends) {
         return;
     }
     
-    console.log('Обновяване на списъка с приятели:', friends); // Debug log
-    
     friendsList.innerHTML = '';
     
     if (!Array.isArray(friends) || friends.length === 0) {
-        friendsList.innerHTML = '<p>Все още нямате приятели</p>';
+        const message = document.createElement('p');
+        message.textContent = 'Все още нямате приятели';
+        friendsList.appendChild(message);
         return;
     }
 
     const currentUser = JSON.parse(localStorage.getItem('user'));
     
     friends.forEach(friend => {
-        if (!friend) return; // Пропускаме невалидни записи
-        
-        const statusText = translateStatus(friend.status || 'pending');
-        const showAcceptReject = friend.status === 'pending' && friend.receiverId === currentUser.id;
-        const isPending = friend.status === 'pending';
-        
-        friendsList.innerHTML += `
-            <div class="friend-card">
-                <div>
-                    <strong>${friend.username || 'Неизвестен потребител'}</strong>
-                    <p>Статус: ${statusText}</p>
-                    ${isPending ? `<p>${friend.senderId === currentUser.id ? 'Изпратена заявка' : 'Получена заявка'}</p>` : ''}
-                    <p>Прогрес: ${friend.progress ? friend.progress.toFixed(2) : 0}%</p>
-                </div>
-                <div class="button-group">
-                    ${showAcceptReject ? `
-                        <button onclick="acceptFriendRequest(${friend.friendshipId})">Приеми</button>
-                        <button onclick="rejectFriendRequest(${friend.friendshipId})">Отхвърли</button>
-                    ` : ''}
-                    ${friend.status === 'accepted' ? `
-                        <button onclick="showNewChallengeForm(${friend.id})">Предизвикай</button>
-                    ` : ''}
-                </div>
-            </div>
-        `;
+        if (!friend) return;
+        const card = UI.createFriendCard(friend, currentUser);
+        friendsList.appendChild(card);
     });
 }
 
@@ -281,32 +339,46 @@ async function sendFriendRequest(userId) {
     }
 }
 
-async function acceptFriendRequest(requestId) {
+async function acceptFriendRequest(friendshipId) {
     try {
-        const response = await fetch(`${config.apiUrl}${config.endpoints.friendAccept.replace(':requestId', requestId)}`, {
+        console.log('Accepting friend request with ID:', friendshipId);
+        
+        // Проверяваме дали имаме ID
+        if (!friendshipId) {
+            console.error('No friendship ID provided');
+            return;
+        }
+
+        const url = `${config.apiUrl}${config.endpoints.friendAccept.replace(':friendshipId', friendshipId)}`;
+        console.log('Request URL:', url);
+
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
-                'Authorization': localStorage.getItem('token')
+                'Authorization': localStorage.getItem('token'),
+                'Content-Type': 'application/json'
             }
         });
 
+        console.log('Response status:', response.status);
+
         if (response.ok) {
             alert('Приятелството е прието успешно!');
-            // Презареждаме списъка с приятели
-            loadFriends();
+            await loadFriends();
         } else {
             const data = await response.json();
+            console.error('Error data:', data);
             alert(data.error || 'Грешка при приемане на приятелството');
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error accepting friend request:', error);
         alert('Грешка при комуникацията със сървъра');
     }
 }
 
-async function rejectFriendRequest(requestId) {
+async function rejectFriendRequest(friendshipId) {
     try {
-        const response = await fetch(`${config.apiUrl}${config.endpoints.friendReject.replace(':requestId', requestId)}`, {
+        const response = await fetch(`${config.apiUrl}${config.endpoints.friendReject.replace(':friendshipId', friendshipId)}`, {
             method: 'POST',
             headers: {
                 'Authorization': localStorage.getItem('token')
@@ -580,6 +652,8 @@ function displayFriendRequests(requests) {
     container.innerHTML = '';
 
     requests.forEach(request => {
+        console.log('Friend request object:', request); // Debug log
+        
         const requestElement = document.createElement('div');
         requestElement.className = 'friend-request';
         requestElement.innerHTML = `
@@ -589,8 +663,8 @@ function displayFriendRequests(requests) {
                 <p>Прогрес: ${request.progress || 0}%</p>
             </div>
             <div class="friend-actions">
-                <button onclick="acceptFriendRequest('${request.id}')" class="accept-btn">Приеми</button>
-                <button onclick="rejectFriendRequest('${request.id}')" class="reject-btn">Отхвърли</button>
+                <button onclick="acceptFriendRequest('${request.friendshipId}')" class="accept-btn">Приеми</button>
+                <button onclick="rejectFriendRequest('${request.friendshipId}')" class="reject-btn">Отхвърли</button>
             </div>
         `;
         container.appendChild(requestElement);

@@ -1,45 +1,25 @@
-<!-- Потребители -->
-<div class="social-container">
-    <!-- Секция за потребители -->
+<div class="container">
+    <!-- Търсене на потребители -->
     <div id="usersContainer" style="display: none;">
         <h2>Потребители</h2>
         <div class="search-container">
-            <input type="text" id="userSearch" placeholder="Търси потребител..." oninput="searchUsers(event)">
+            <input type="text" id="userSearch" placeholder="Търси потребители..." onkeyup="searchUsers(event)">
         </div>
         <div id="usersList"></div>
     </div>
 
-    <!-- Секция за приятели -->
+    <!-- Приятели -->
     <div id="friendsContainer" style="display: none;">
         <h2>Приятели</h2>
         <div class="search-container">
-            <input type="text" id="friendSearch" placeholder="Търси приятел..." oninput="searchFriends(event)">
+            <input type="text" id="friendSearch" placeholder="Търси приятели..." onkeyup="searchFriends(event)">
         </div>
         <div id="friendsList"></div>
     </div>
 
-    <!-- Секция за предизвикателства -->
+    <!-- Предизвикателства -->
     <div id="challengesContainer" style="display: none;">
         <h2>Предизвикателства</h2>
         <div id="challengesList"></div>
     </div>
-</div>
-
-<!-- Форма за ново предизвикателство -->
-<div id="newChallengeForm" class="challenge-form" style="display: none;">
-    <h2>Ново предизвикателство</h2>
-    <div class="form-group">
-        <label for="challengeOpponent">Опонент:</label>
-        <select id="challengeOpponent" required></select>
-    </div>
-    <div class="form-group">
-        <label for="challengeStartDate">Начална дата:</label>
-        <input type="date" id="challengeStartDate" required>
-    </div>
-    <div class="form-group">
-        <label for="challengeEndDate">Крайна дата:</label>
-        <input type="date" id="challengeEndDate" required>
-    </div>
-    <button onclick="createChallenge()">Създай</button>
-    <button onclick="hideNewChallengeForm()">Отказ</button>
 </div> 

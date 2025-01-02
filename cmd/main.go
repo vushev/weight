@@ -88,8 +88,8 @@ func main() {
 		// Приятелства
 		authorized.GET("/friends", getFriends)
 		authorized.POST("/friends/request/:userId", sendFriendRequest)
-		authorized.PUT("/friends/accept/:requestId", acceptFriendRequest)
-		authorized.PUT("/friends/reject/:requestId", rejectFriendRequest)
+		authorized.POST("/friends/accept/:friendshipId", acceptFriendRequest)
+		authorized.POST("/friends/reject/:friendshipId", rejectFriendRequest)
 
 		// Съревнования
 		authorized.GET("/challenges", getChallenges)
@@ -683,14 +683,15 @@ func sendFriendRequest(c *gin.Context) {
 
 func acceptFriendRequest(c *gin.Context) {
 	userID := getUserID(c)
-	requestID := c.Param("requestId")
+	friendshipID := c.Param("friendshipId")
 
 	result, err := db.Exec(`
         UPDATE friendships 
         SET status = 'accepted' 
         WHERE id = ? AND addressee_id = ?`,
-		requestID, userID)
-
+		friendshipID, userID)
+	fmt.Println("friendshipID:", friendshipID)
+	fmt.Println("userID:", userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not accept friend request"})
 		return
@@ -707,13 +708,13 @@ func acceptFriendRequest(c *gin.Context) {
 
 func rejectFriendRequest(c *gin.Context) {
 	userID := getUserID(c)
-	requestID := c.Param("requestId")
+	friendshipID := c.Param("friendshipId")
 
 	result, err := db.Exec(`
         UPDATE friendships 
         SET status = 'rejected' 
         WHERE id = ? AND addressee_id = ?`,
-		requestID, userID)
+		friendshipID, userID)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not reject friend request"})

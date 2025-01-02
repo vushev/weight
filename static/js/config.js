@@ -13,13 +13,12 @@ const config = {
         users: '/users',
         visibility: '/user/visibility',
         friends: '/friends',
-        friendRequest: '/friends/request/:userId',
-        friendAccept: '/friends/accept/:requestId',
-        friendReject: '/friends/reject/:requestId',
+        friendRequest: '/friends/:userId',
+        friendAccept: '/friends/accept/:friendshipId',
+        friendReject: '/friends/reject/:friendshipId',
         challenges: '/challenges',
         challengeAccept: '/challenges/:challengeId/accept',
         challengeReject: '/challenges/:challengeId/reject',
-        challengeResults: '/challenges/:challengeId/results',
-        updateVisibility: '/user/visibility'
+        challengeResults: '/challenges/:challengeId/results'
     }
 }; 
