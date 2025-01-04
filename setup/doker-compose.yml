@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: chess_app
+    container_name: weight-challenge-api
     ports:
       - "8080:8080"
     depends_on:

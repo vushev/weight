@@ -30,6 +30,7 @@ services:
 
   api:
     build: .
+    container_name: weight-challenge-api
     restart: always
     ports:
       - "8080:8080"

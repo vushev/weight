@@ -1,0 +1,16 @@
+[Unit]
+Description=Weight Challenge API
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+ExecStartPre=-/usr/bin/docker rm -f weight-challenge-api
+ExecStart=/usr/bin/docker run --name weight-challenge-api \
+    -p 8080:8080 \
+    --restart unless-stopped \
+    weight-api
+ExecStop=/usr/bin/docker stop weight-challenge-api
+
+[Install]
+WantedBy=multi-user.target

@@ -11,6 +11,7 @@ docker compose up -d
 ### Systemd
 
 ```bash
+sudo systemctl daemon-reload
 sudo systemctl enable weight-challenge-api
 sudo systemctl start weight-challenge-api
 ```
