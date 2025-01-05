@@ -132,7 +132,7 @@ function updateUsersList(users) {
                         `<p>${user.firstName || ''} ${user.lastName || ''}</p>` : ''}
                     <p>Прогрес: ${user.progress ? user.progress.toFixed(2) : 0}%</p>
                 </div>
-                <button onclick="sendFriendRequest(${user.id})">
+                <button onclick="sendFriendRequest('${user.id}')">
                     Добави приятел
                 </button>
             </div>
@@ -320,37 +320,18 @@ function translateChallengeStatus(status) {
 // Функции за действия
 async function sendFriendRequest(userId) {
     try {
-        const response = await fetch(`${config.apiUrl}${config.endpoints.friendRequest.replace(':userId', userId)}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': localStorage.getItem('token')
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Грешка при изпращане на заявката');
-        }
-
-        alert('Заявката е изпратена успешно');
-        await loadUsers();
-    } catch (error) {
-        console.error('Error:', error);
-        alert(error.message);
-    }
-}
-
-async function acceptFriendRequest(friendshipId) {
-    try {
-        console.log('Accepting friend request with ID:', friendshipId);
+        console.log('Изпращане на заявка за приятелство към потребител с ID:', userId);
         
-        // Проверяваме дали имаме ID
-        if (!friendshipId) {
-            console.error('No friendship ID provided');
+        if (!userId) {
+            const error = new Error('Липсва ID на потребителя');
+            logError('Изпращане на заявка за приятелство', error);
+            alert('Грешка: ' + error.message);
             return;
         }
 
-        const url = `${config.apiUrl}${config.endpoints.friendAccept.replace(':friendshipId', friendshipId)}`;
-        console.log('Request URL:', url);
+        // const url = `${config.apiUrl}${config.endpoints.friendRequest.replace(':userId', userId)}`; // do not delete this row
+        const url = `${config.apiUrl}/friends/request/${userId}`;
+        console.log('URL на заявката:', url);
 
         const response = await fetch(url, {
             method: 'POST',
@@ -360,24 +341,125 @@ async function acceptFriendRequest(friendshipId) {
             }
         });
 
-        console.log('Response status:', response.status);
+        console.log('Статус на отговора:', response.status);
+        const data = await response.json();
+        console.log('Данни от отговора:', data);
+
+        if (response.ok) {
+            alert('Заявката за приятелство е изпратена успешно');
+            await loadUsers();
+        } else {
+            let errorMessage = 'Грешка при изпращане на заявката';
+            if (data.error) {
+                errorMessage = `Грешка: ${data.error}`;
+            } else if (response.status === 400) {
+                errorMessage = 'Невалидна заявка. Моля, опитайте отново.';
+            } else if (response.status === 401) {
+                errorMessage = 'Нямате права за тази операция.';
+            } else if (response.status === 404) {
+                errorMessage = 'Потребителят не е намерен.';
+            }
+            
+            logError('Изпращане на заявка за приятелство', errorMessage, {
+                статус: response.status,
+                данни: data,
+                потребителId: userId
+            });
+            
+            alert(errorMessage);
+        }
+    } catch (error) {
+        const errorInfo = logError('Изпращане на заявка за приятелство', error, {
+            потребителId: userId
+        });
+        alert(`Възникна грешка при комуникацията със сървъра:\n${errorInfo.грешка}`);
+    }
+}
+
+// Помощни функции
+function logError(action, error, details = {}) {
+    const errorInfo = {
+        действие: action,
+        време: new Date().toISOString(),
+        грешка: error.message || error,
+        ...details
+    };
+    
+    console.error('=== ГРЕШКА ===');
+    console.error(JSON.stringify(errorInfo, null, 2));
+    console.error('=============');
+    
+    return errorInfo;
+}
+
+async function acceptFriendRequest(friendshipId) {
+    try {
+        console.log('Приемане на приятелство с ID:', friendshipId);
+        
+        if (!friendshipId) {
+            const error = new Error('Липсва ID на приятелството');
+            logError('Приемане на приятелство', error);
+            alert('Грешка: ' + error.message);
+            return;
+        }
+
+        const url = `${config.apiUrl}${config.endpoints.friendAccept.replace(':friendshipId', friendshipId)}`;
+        console.log('URL на заявката:', url);
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': localStorage.getItem('token'),
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('Статус на отговора:', response.status);
+        const data = await response.json();
+        console.log('Данни от отговора:', data);
 
         if (response.ok) {
             alert('Приятелството е прието успешно!');
             await loadFriends();
         } else {
-            const data = await response.json();
-            console.error('Error data:', data);
-            alert(data.error || 'Грешка при приемане на приятелството');
+            let errorMessage = 'Грешка при приемане на приятелството';
+            if (data.error) {
+                errorMessage = `Грешка: ${data.error}`;
+            } else if (response.status === 400) {
+                errorMessage = 'Невалидна заявка. Моля, опитайте отново.';
+            } else if (response.status === 401) {
+                errorMessage = 'Нямате права за тази операция.';
+            } else if (response.status === 404) {
+                errorMessage = 'Заявката за приятелство не е намерена.';
+            }
+            
+            logError('Приемане на приятелство', errorMessage, {
+                статус: response.status,
+                данни: data,
+                приятелствоId: friendshipId
+            });
+            
+            alert(errorMessage);
         }
     } catch (error) {
-        console.error('Error accepting friend request:', error);
-        alert('Грешка при комуникацията със сървъра');
+        const errorInfo = logError('Приемане на приятелство', error, {
+            приятелствоId: friendshipId
+        });
+        alert(`Възникна грешка при комуникацията със сървъра:\n${errorInfo.грешка}`);
     }
 }
 
 async function rejectFriendRequest(friendshipId) {
     try {
+        console.log('Отхвърляне на приятелство с ID:', friendshipId);
+
+        if (!friendshipId) {
+            const error = new Error('Липсва ID на приятелството');
+            logError('Отхвърляне на приятелство', error);
+            alert('Грешка: ' + error.message);
+            return;
+        }
+
         const response = await fetch(`${config.apiUrl}${config.endpoints.friendReject.replace(':friendshipId', friendshipId)}`, {
             method: 'POST',
             headers: {
@@ -385,17 +467,26 @@ async function rejectFriendRequest(friendshipId) {
             }
         });
 
+        const data = await response.json();
+        console.log('Данни от отговора:', data);
+
         if (response.ok) {
-            alert('Заявката е отхвърлена');
-            // Презареждаме списъка с приятели
-            loadFriends();
+            alert('Заявката е отхвърлена успешно');
+            await loadFriends();
         } else {
-            const data = await response.json();
-            alert(data.error || 'Грешка при отхвърляне на заявката');
+            const errorMessage = data.error || 'Грешка при отхвърляне на заявката';
+            logError('Отхвърляне на приятелство', errorMessage, {
+                статус: response.status,
+                данни: data,
+                приятелствоId: friendshipId
+            });
+            alert(errorMessage);
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('Грешка при комуникацията със сървъра');
+        const errorInfo = logError('Отхвърляне на приятелство', error, {
+            приятелствоId: friendshipId
+        });
+        alert(`Възникна грешка при комуникацията със сървъра:\n${errorInfo.грешка}`);
     }
 }
 

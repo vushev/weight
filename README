@@ -1,6 +1,14 @@
 # Weight Challenge API
 
 ## Setup
+need to do something on every CI from github actions
+
+docker stop weight-challenge-api
+docker rm weight-challenge-api
+
+docker rmi weight-api
+docker build -t weight-api .
+
 
 ### Docker
 

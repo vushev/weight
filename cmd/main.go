@@ -3,9 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 	"weight-challenge/models"
 
@@ -19,13 +21,41 @@ import (
 var db *sql.DB
 
 func main() {
+	var err error
+
 	// Зареждане на .env файл
-	if err := godotenv.Load(); err != nil {
+	if err = godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
+	// Създаваме директория за логове ако не съществува
+	if err = os.MkdirAll("logs", 0755); err != nil {
+		log.Fatal("Error creating logs directory:", err)
+	}
+
+	// Отваряме файл за логове
+	logFile, err := os.OpenFile("logs/server.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal("Error opening log file:", err)
+	}
+	defer logFile.Close()
+
+	// Конфигурираме логването според средата
+	appEnv := os.Getenv("APP_ENV")
+	if appEnv == "development" {
+		// В development режим логваме във файл и в конзолата
+		log.SetOutput(io.MultiWriter(logFile, os.Stdout))
+		gin.SetMode(gin.DebugMode)
+	} else {
+		// В production режим логваме само във файл
+		log.SetOutput(logFile)
+		gin.SetMode(gin.ReleaseMode)
+	}
+	
+	// Задаваме формат на логовете
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+
 	// Свързване с базата данни
-	var err error
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=True&loc=Local",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
@@ -40,18 +70,20 @@ func main() {
 	}
 
 	// Проверка на връзката
-	if err := db.Ping(); err != nil {
+	if err = db.Ping(); err != nil {
 		log.Fatal("Could not connect to database:", err)
 	}
 
+	log.Printf("Server starting in %s mode", appEnv)
 	log.Println("Successfully connected to database")
 	defer db.Close()
 
 	r := gin.Default()
 
-	// Добавяме debug логове
-	gin.SetMode(gin.DebugMode)
-	r.Use(gin.Logger())
+	// Конфигурираме Gin logger според средата
+	if appEnv == "development" {
+		r.Use(gin.Logger())
+	}
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -666,44 +698,154 @@ func getFriends(c *gin.Context) {
 
 func sendFriendRequest(c *gin.Context) {
 	userID := getUserID(c)
-	friendID := c.Param("userId")
+	friendIDStr := c.Param("userId")
 
-	_, err := db.Exec(`
-        INSERT INTO friendships (requester_id, addressee_id) 
-        VALUES (?, ?)`,
-		userID, friendID)
-
+	// Конвертираме friendID в число
+	friendID, err := strconv.Atoi(friendIDStr)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not send friend request"})
+		log.Printf("Невалидно ID на потребител: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Невалидно ID на потребител"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Friend request sent"})
+	// Debug logging
+	log.Printf("Получена заявка за приятелство от потребител %d към потребител %d", userID, friendID)
+
+	// Проверяваме дали потребителят съществува
+	var exists bool
+	err = db.QueryRow(`
+        SELECT EXISTS(
+            SELECT 1 FROM users 
+            WHERE id = ?
+        )`, friendID).Scan(&exists)
+
+	if err != nil {
+		log.Printf("Грешка при проверка на потребителя: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Възникна грешка при проверка на потребителя"})
+		return
+	}
+
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Потребителят не е намерен"})
+		return
+	}
+
+	// Проверяваме дали вече има активна или изчакваща заявка между тези потребители
+	err = db.QueryRow(`
+        SELECT EXISTS(
+            SELECT 1 FROM friendships 
+            WHERE ((requester_id = ? AND addressee_id = ?) 
+               OR (requester_id = ? AND addressee_id = ?))
+            AND status IN ('pending', 'accepted')
+        )`, userID, friendID, friendID, userID).Scan(&exists)
+
+	if err != nil {
+		log.Printf("Грешка при проверка за съществуваща заявка: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Възникна грешка при проверка за съществуваща заявка"})
+		return
+	}
+
+	if exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Вече съществува активна заявка за приятелство между тези потребители"})
+		return
+	}
+
+	// Първо проверяваме дали има отхвърлена заявка и я актуализираме
+	result, err := db.Exec(`
+        UPDATE friendships 
+        SET status = 'pending', requester_id = ?, addressee_id = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE (requester_id = ? AND addressee_id = ?) 
+           OR (requester_id = ? AND addressee_id = ?)
+           AND status = 'rejected'`,
+        userID, friendID, userID, friendID, friendID, userID)
+
+	if err != nil {
+		log.Printf("Грешка при обновяване на съществуваща заявка: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Възникна грешка при обновяване на заявката"})
+		return
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	
+	// Ако няма отхвърлена заявка за обновяване, създаваме нова
+	if rowsAffected == 0 {
+		_, err = db.Exec(`
+            INSERT INTO friendships (requester_id, addressee_id) 
+            VALUES (?, ?)`,
+            userID, friendID)
+
+		if err != nil {
+			log.Printf("Грешка при създаване на нова заявка за приятелство: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Възникна грешка при създаване на заявката"})
+			return
+		}
+	}
+
+	log.Printf("Успешно създадена/обновена заявка за приятелство от %d към %d", userID, friendID)
+	c.JSON(http.StatusOK, gin.H{"message": "Заявката за приятелство е изпратена успешно"})
 }
 
 func acceptFriendRequest(c *gin.Context) {
 	userID := getUserID(c)
 	friendshipID := c.Param("friendshipId")
 
+	// Проверяваме дали приятелството съществува
+	var exists bool
+	err := db.QueryRow(`
+        SELECT EXISTS(
+            SELECT 1 FROM friendships 
+            WHERE id = ?
+        )`, friendshipID).Scan(&exists)
+
+	if err != nil {
+		log.Printf("Грешка при проверка на приятелството: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Възникна грешка при проверка на приятелството"})
+		return
+	}
+
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Приятелството не съществува"})
+		return
+	}
+
+	// Проверяваме дали потребителят има право да приеме това приятелство
+	var isAddressee bool
+	err = db.QueryRow(`
+        SELECT EXISTS(
+            SELECT 1 FROM friendships 
+            WHERE id = ? AND addressee_id = ? AND status = 'pending'
+        )`, friendshipID, userID).Scan(&isAddressee)
+
+	if err != nil {
+		log.Printf("Грешка при проверка на правата: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Възникна грешка при проверка на правата"})
+		return
+	}
+
+	if !isAddressee {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Нямате право да приемете това приятелство или то вече е обработено"})
+		return
+	}
+
 	result, err := db.Exec(`
         UPDATE friendships 
         SET status = 'accepted' 
-        WHERE id = ? AND addressee_id = ?`,
-		friendshipID, userID)
-	fmt.Println("friendshipID:", friendshipID)
-	fmt.Println("userID:", userID)
+        WHERE id = ? AND addressee_id = ? AND status = 'pending'`,
+        friendshipID, userID)
+
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not accept friend request"})
+		log.Printf("Грешка при приемане на приятелството: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Възникна грешка при приемане на приятелството"})
 		return
 	}
 
 	rows, _ := result.RowsAffected()
 	if rows == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Приятелството не може да бъде прието"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Friend request accepted"})
+	c.JSON(http.StatusOK, gin.H{"message": "Приятелството е прието успешно"})
 }
 
 func rejectFriendRequest(c *gin.Context) {
