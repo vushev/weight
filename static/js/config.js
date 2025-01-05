@@ -13,7 +13,7 @@ const config = {
         users: '/users',
         visibility: '/user/visibility',
         friends: '/friends',
-        friendRequest: '/friends/:userId',
+        friendRequest: '/friends/request/:userId',
         friendAccept: '/friends/accept/:friendshipId',
         friendReject: '/friends/reject/:friendshipId',
         challenges: '/challenges',

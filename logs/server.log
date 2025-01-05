@@ -1,1 +1,7 @@
 
+2025/01/05 13:42:19 main.go:77: Server starting in development mode
+2025/01/05 13:42:19 main.go:78: Successfully connected to database
+2025/01/05 13:42:19 main.go:139: Server starting on http://http://localhost:8080
+2025/01/05 14:21:33 main.go:77: Server starting in development mode
+2025/01/05 14:21:33 main.go:78: Successfully connected to database
+2025/01/05 14:21:33 main.go:139: Server starting on http://http://localhost:8080

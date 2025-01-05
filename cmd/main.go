@@ -700,11 +700,25 @@ func sendFriendRequest(c *gin.Context) {
 	userID := getUserID(c)
 	friendIDStr := c.Param("userId")
 
+	// Проверяваме дали ID-то не е празно
+	if friendIDStr == "" {
+		log.Printf("Липсващо ID на потребител в заявката")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Не е предоставено ID на потребител"})
+		return
+	}
+
 	// Конвертираме friendID в число
 	friendID, err := strconv.Atoi(friendIDStr)
 	if err != nil {
-		log.Printf("Невалидно ID на потребител: %v", err)
+		log.Printf("Невалидно ID на потребител: %v (стойност: %s)", err, friendIDStr)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Невалидно ID на потребител"})
+		return
+	}
+
+	// Проверяваме дали потребителят не се опитва да добави себе си
+	if friendID == userID {
+		log.Printf("Потребител %d се опитва да добави себе си за приятел", userID)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Не можете да добавите себе си за приятел"})
 		return
 	}
 

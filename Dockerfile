@@ -9,6 +9,9 @@ RUN apk add --no-cache build-base
 COPY go.mod go.sum ./
 RUN go mod download && go mod tidy
 
+# Копирайте целия проект
+COPY . .
+
 # Изложете порта
 EXPOSE 8080
 
