@@ -1,5 +1,7 @@
 // Функции за управление на теглото
 async function addWeight() {
+    if (!isAuthenticated()) return;
+
     const weight = parseFloat(document.getElementById('weight').value);
     const weightDate = document.getElementById('weightDate').value;
     
@@ -12,7 +14,7 @@ async function addWeight() {
         const response = await fetch(`${config.apiUrl}${config.endpoints.weight}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json; charset=utf-8',
                 'Authorization': localStorage.getItem('token')
             },
             body: JSON.stringify({
@@ -36,6 +38,8 @@ async function addWeight() {
 }
 
 async function deleteWeight(weightId) {
+    if (!isAuthenticated()) return;
+
     // Проверяваме дали имаме валидно ID
     if (!weightId) {
         console.error('No weight ID provided');
@@ -70,6 +74,8 @@ async function deleteWeight(weightId) {
 }
 
 async function loadStats() {
+    if (!isAuthenticated()) return;
+
     try {
         const response = await fetch(`${config.apiUrl}${config.endpoints.weightStats}`, {
             headers: {
@@ -83,11 +89,17 @@ async function loadStats() {
             updateHistoryDisplay(data.history);
         } else {
             const data = await response.json();
-            alert(data.error || 'Грешка при зареждане на статистиката');
+            // Не показваме alert при грешка, ако потребителят не е логнат
+            if (isAuthenticated()) {
+                alert(data.error || 'Грешка при зареждане на статистиката');
+            }
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Възникна грешка при комуникацията със сървъра');
+        // Не показваме alert при грешка, ако потребителят не е логнат
+        if (isAuthenticated()) {
+            alert('Възникна грешка при комуникацията със сървъра');
+        }
     }
 }
 
@@ -144,6 +156,11 @@ function updateHistoryDisplay(history) {
 
 // Навигационни функции
 async function showWeightForm() {
+    if (!isAuthenticated()) {
+        loadComponent('auth');
+        return;
+    }
+
     await loadComponent('weight');
     document.getElementById('weightForm').style.display = 'block';
     document.getElementById('statsContainer').style.display = 'none';
@@ -154,6 +171,11 @@ async function showWeightForm() {
 }
 
 async function showStats() {
+    if (!isAuthenticated()) {
+        loadComponent('auth');
+        return;
+    }
+
     await loadComponent('weight');
     document.getElementById('weightForm').style.display = 'none';
     document.getElementById('statsContainer').style.display = 'block';

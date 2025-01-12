@@ -1,6 +1,7 @@
-<!-- Форма за добавяне на тегло -->
-<div id="weightForm" class="weight-form" style="display: none;">
-    <h2>Добави тегло</h2>
+<div class="container">
+    <!-- Форма за добавяне на тегло -->
+    <div id="weightForm" class="weight-form">
+        <h2>Добави тегло</h2>
     <div class="form-group">
         <label for="weight">Тегло (кг):</label>
         <input type="number" id="weight" step="0.1" required>
@@ -13,10 +14,11 @@
 </div>
 
 <!-- Статистика -->
-<div id="statsContainer" class="stats-container" style="display: none;">
-    <h2>Статистика</h2>
-    <div class="stats-grid">
-        <div class="stat-box">
+<div class="container">
+    <div id="statsContainer" class="stats-container">
+        <h2>Статистика</h2>
+        <div class="stats-grid">
+            <div class="stat-box">
             <h3>Текущо тегло</h3>
             <p id="currentWeight">-</p>
         </div>
@@ -36,11 +38,12 @@
             <h3>BMI</h3>
             <p id="bmi">-</p>
         </div>
+        </div>
     </div>
-</div>
 
-<!-- История -->
-<div id="historyContainer" class="history-container" style="display: none;">
-    <h2>История</h2>
-    <div id="weightHistory"></div>
-</div> 
+    <!-- История -->
+    <div id="historyContainer" class="history-container">
+        <h2>История</h2>
+        <div id="weightHistory"></div>
+    </div> 
+</div>

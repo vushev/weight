@@ -4,11 +4,16 @@ async function register() {
     const password = document.getElementById('registerPassword').value;
     const height = parseFloat(document.getElementById('registerHeight').value);
 
+    if (!username || !password || !height) {
+        alert('Моля, въведете всички полета');
+        return;
+    }
+
     try {
         const response = await fetch(`${config.apiUrl}${config.endpoints.register}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json;',
             },
             body: JSON.stringify({ username, password, height })
         });
@@ -27,25 +32,41 @@ async function register() {
 }
 
 async function login() {
-    console.log('Login function called');
+
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
+
+    if (!username || !password) {
+        alert('Моля, въведете потребителско име и парола');
+        return;
+    }
 
     try {
         const response = await fetch(`${config.apiUrl}${config.endpoints.login}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json; charset=utf-8',
             },
             body: JSON.stringify({ username, password })
         });
 
         if (response.ok) {
+            console.log('Response:', response);
             const data = await response.json();
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            document.getElementById('mainNav').style.display = 'flex';
-            showStats();
+            await authState.check();
+            // localStorage.setItem('token', data.token);
+            // localStorage.setItem('user', JSON.stringify(data.user));
+
+            // Показваме навигацията и съдържанието
+            // document.getElementById('mainNav').classList.remove('hidden');
+            document.getElementById('navToggle').classList.remove('hidden');
+            document.getElementById('mainNavAccordion').classList.remove('hidden');
+            // document.getElementById('content').classList.remove('hidden');
+            // showWeight();
+            // document.getElementById('mainNav').classList.remove('hidden');
+
+            document.getElementById('components').innerHTML = `<div class="container">Welcome ${authState.user.username}</div>`;
+
         } else {
             const data = await response.json();
             alert(data.error || 'Грешка при вход');
@@ -56,10 +77,27 @@ async function login() {
     }
 }
 
-function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    document.getElementById('mainNav').style.display = 'none';
+async function logout() {
+    // localStorage.removeItem('token');
+    // localStorage.removeItem('user');
+    
+    await api.logout();
+
+    // Скриваме навигацията и съдържанието
+    const main = document.getElementsByTagName('main')[0];
+    if (main) {
+        const sections = main.querySelectorAll('div.section');
+        sections.forEach(section => {
+            section.classList.add('hidden');
+        });
+    } else {
+        console.log('No main element found');
+    }
+    
+    document.getElementById('mainNav').classList.add('hidden');
+    // document.getElementById('content').classList.add('hidden');
+    // document.getElementById('components').classList.remove('hidden');
+    
     loadComponent('auth');
 }
 
@@ -75,7 +113,7 @@ async function resetPassword() {
         const response = await fetch(`${config.apiUrl}${config.endpoints.resetPassword}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json; charset=utf-8',
             },
             body: JSON.stringify({ username })
         });
@@ -121,8 +159,23 @@ function showLoginForm() {
 
 // Добавяме функция за инициализация
 async function initAuth() {
-    await loadComponent('auth');
-    showLoginForm(); // Показваме формата за вход по подразбиране
+    // const token = localStorage.getItem('token');
+    const token = document.cookie.split('; ').find(row => row.startsWith('access_token=')).split('=')[1];
+    console.log('Token:', token);
+    if (token) {
+        // Ако има токен, показваме съдържанието
+        document.getElementById('mainNav').classList.remove('hidden');
+        document.getElementById('content').classList.remove('hidden');
+        document.getElementById('components').classList.add('hidden');
+        // showStats();
+    } else {
+        // Ако няма токен, показваме формата за вход
+        document.getElementById('mainNav').classList.add('hidden');
+        document.getElementById('content').classList.add('hidden');
+        document.getElementById('components').classList.remove('hidden');
+        await loadComponent('auth');
+        showLoginForm();
+    }
 }
 
 // Обновяваме функцията за показване на регистрационната форма
@@ -130,3 +183,44 @@ function showRegisterForm() {
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'block';
 } 
+
+const authState = {
+    isAuthenticated: false,
+    user: null,
+
+    async check() {
+        try {
+            /*const response = await fetch(`${config.apiUrl}${config.endpoints.authStatus}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                },
+                mode: 'same-origin'  // важно за same-origin заявки
+            });*/
+
+            const response = await api.checkAuth();
+
+            if (response.ok !== true) {
+                this.isAuthenticated = false;
+                this.user = null;
+                return false;
+            }
+
+            // const data = await response.json();
+            const data = response;
+
+            this.isAuthenticated = true;
+            this.user = data.user;
+
+            return true;
+        } catch {
+            this.isAuthenticated = false;
+            this.user = null;
+            return false;
+        }
+    }
+};

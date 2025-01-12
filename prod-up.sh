@@ -1,7 +1,7 @@
 #!/bin/bash
 case "$1" in
   "up")
-    docker-compose -f docker-compose.prod.yml up -d
+    docker-compose -f docker-compose.prod.yml up -d --remove-orphans
     ;;
   "down")
     docker-compose -f docker-compose.prod.yml down
@@ -13,4 +13,4 @@ case "$1" in
     echo "Usage: $0 {up|down|logs}"
     exit 1
     ;;
-esac
+esacъ

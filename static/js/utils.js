@@ -44,16 +44,39 @@ function showSuccess(message) {
 
 function getAuthHeaders() {
     return {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
         'Authorization': localStorage.getItem('token')
     };
 }
 
-function isAuthenticated() {
-    return !!localStorage.getItem('token');
+async function isAuthenticated() {
+    console.log('isAuthenticated utils');
+    return await authState.isAuthenticated;
 }
 
 function getCurrentUser() {
     const userJson = localStorage.getItem('user');
     return userJson ? JSON.parse(userJson) : null;
+}
+
+function refreshCurrentView() {
+    const currentView = localStorage.getItem('currentView') || 'stats';
+    
+    switch (currentView) {
+        case 'stats':
+            showStats();
+            break;
+        case 'users':
+            showUsers();
+            break;
+        case 'friends':
+            showFriends();
+            break;
+        case 'challenges':
+            showChallenges();
+            break;
+        case 'settings':
+            showSettings();
+            break;
+    }
 } 

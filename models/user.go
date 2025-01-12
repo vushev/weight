@@ -7,10 +7,10 @@ type User struct {
 	FirstName string  `json:"firstName,omitempty"`
 	LastName  string  `json:"lastName,omitempty"`
 	Age       int     `json:"age,omitempty"`
-	Height    float64 `json:"height"`
+	Height    float64 `json:"height,omitempty"`
 	Gender    string  `json:"gender,omitempty"`
 	Email     string  `json:"email,omitempty"`
-	Target    float64 `json:"target,omitempty"`
+	Target    float64 `json:"targetWeight,omitempty"`
 	IsVisible bool    `json:"isVisible,omitempty"`
 }
 

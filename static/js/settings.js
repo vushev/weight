@@ -33,14 +33,13 @@ async function saveSettings() {
         const response = await fetch(`${config.apiUrl}${config.endpoints.userSettings}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json; charset=utf-8',
                 'Authorization': localStorage.getItem('token')
             },
             body: JSON.stringify(settings)
         });
 
         if (response.ok) {
-            await updateVisibility(settings.isVisible);
             alert('Настройките са запазени успешно');
         } else {
             const data = await response.json();
@@ -65,7 +64,7 @@ async function changePassword() {
         const response = await fetch(`${config.apiUrl}${config.endpoints.changePassword}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json; charset=utf-8',
                 'Authorization': localStorage.getItem('token')
             },
             body: JSON.stringify({
@@ -101,10 +100,11 @@ function updateSettingsForm(data) {
 }
 
 // Навигационни функции
-async function showSettings() {
+async function showUserSettings() {
     await loadComponent('settings');
-    document.getElementById('settingsForm').style.display = 'block';
-    document.getElementById('changePasswordForm').style.display = 'none';
+    
+    // document.getElementById('settingsSection').style.display = 'block';
+    // document.getElementById('changePasswordForm').style.display = 'none';
     await loadUserSettings();
 }
 
@@ -124,7 +124,7 @@ async function updateVisibility(isVisible) {
         const response = await fetch(`${config.apiUrl}${config.endpoints.updateVisibility}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json; charset=utf-8',
                 'Authorization': localStorage.getItem('token')
             },
             body: JSON.stringify({ isVisible })
